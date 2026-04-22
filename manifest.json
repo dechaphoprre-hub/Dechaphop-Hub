@@ -2,7 +2,7 @@
   "name": "Personal Hub - เฮีย",
   "short_name": "Personal Hub",
   "description": "แอปบันทึกค่าใช้จ่าย และโน้ตเตือนความจำ",
-  "start_url": "/",
+  "start_url": "./",
   "display": "standalone",
   "background_color": "#fafaf8",
   "theme_color": "#D85A30",
