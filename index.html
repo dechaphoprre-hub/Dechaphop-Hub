@@ -1,0 +1,982 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="แอปบันทึกค่าใช้จ่าย และโน้ตเตือนความจำ สำหรับเฮีย">
+<meta name="theme-color" content="#D85A30">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>Personal Hub - เฮีย</title>
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  background: #fafaf8;
+  color: #1a1a1a;
+  overflow-x: hidden;
+}
+
+.app-container {
+  display: flex;
+  height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 240px;
+  background: linear-gradient(135deg, #D85A30 0%, #EF9F27 100%);
+  padding: 1.5rem 0;
+  display: flex;
+  flex-direction: column;
+  box-shadow: 2px 0 8px rgba(0,0,0,0.1);
+}
+
+.logo {
+  padding: 0 1.5rem 1.5rem;
+  border-bottom: 1px solid rgba(255,255,255,0.2);
+  margin-bottom: 1rem;
+}
+
+.logo h1 {
+  font-size: 22px;
+  font-weight: 500;
+  color: white;
+  margin-bottom: 4px;
+}
+
+.logo p {
+  font-size: 13px;
+  color: rgba(255,255,255,0.85);
+}
+
+.nav-menu {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.nav-item {
+  padding: 12px 1.5rem;
+  cursor: pointer;
+  color: rgba(255,255,255,0.85);
+  font-size: 15px;
+  font-weight: 400;
+  transition: all 0.2s;
+  border-left: 3px solid transparent;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nav-item:hover {
+  background: rgba(255,255,255,0.1);
+  color: white;
+}
+
+.nav-item.active {
+  background: rgba(255,255,255,0.15);
+  color: white;
+  border-left-color: white;
+  font-weight: 500;
+}
+
+.nav-icon {
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+}
+
+/* Main Content */
+.main-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2rem;
+}
+
+.page {
+  display: none;
+}
+
+.page.active {
+  display: block;
+}
+
+.page-header {
+  margin-bottom: 2rem;
+}
+
+.page-header h2 {
+  font-size: 28px;
+  font-weight: 500;
+  margin-bottom: 8px;
+}
+
+.page-header p {
+  font-size: 15px;
+  color: #666;
+}
+
+/* Dashboard Stats */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  background: white;
+  border: 0.5px solid rgba(0,0,0,0.08);
+  border-radius: 12px;
+  padding: 1.25rem;
+}
+
+.stat-label {
+  font-size: 13px;
+  color: #666;
+  margin-bottom: 8px;
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 500;
+  background: linear-gradient(135deg, #D85A30 0%, #EF9F27 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.stat-change {
+  font-size: 13px;
+  margin-top: 4px;
+  color: #0F6E56;
+}
+
+/* Expense Form */
+.expense-form {
+  background: white;
+  border: 0.5px solid rgba(0,0,0,0.08);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group label {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 10px 12px;
+  border: 0.5px solid rgba(0,0,0,0.15);
+  border-radius: 8px;
+  font-size: 15px;
+  font-family: inherit;
+  background: white;
+  color: #1a1a1a;
+  transition: border-color 0.2s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #D85A30;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.btn {
+  padding: 10px 20px;
+  border: 0.5px solid rgba(0,0,0,0.15);
+  border-radius: 8px;
+  background: transparent;
+  color: #1a1a1a;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn:hover {
+  background: #f5f5f3;
+}
+
+.btn:active {
+  transform: scale(0.98);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #D85A30 0%, #EF9F27 100%);
+  color: white;
+  border: none;
+}
+
+.btn-primary:hover {
+  opacity: 0.9;
+  background: linear-gradient(135deg, #D85A30 0%, #EF9F27 100%);
+}
+
+/* Expense List */
+.expense-list {
+  background: white;
+  border: 0.5px solid rgba(0,0,0,0.08);
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.expense-item {
+  padding: 1rem 1.25rem;
+  border-bottom: 0.5px solid rgba(0,0,0,0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.expense-item:last-child {
+  border-bottom: none;
+}
+
+.expense-info {
+  flex: 1;
+}
+
+.expense-title {
+  font-size: 15px;
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.expense-meta {
+  font-size: 13px;
+  color: #666;
+}
+
+.expense-amount {
+  font-size: 18px;
+  font-weight: 500;
+  color: #D85A30;
+}
+
+.category-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 500;
+  margin-right: 8px;
+}
+
+.cat-food { background: #EAF3DE; color: #3B6D11; }
+.cat-transport { background: #E6F1FB; color: #185FA5; }
+.cat-shopping { background: #FAECE7; color: #993C1D; }
+.cat-bills { background: #FCEBEB; color: #A32D2D; }
+.cat-other { background: #F1EFE8; color: #5F5E5A; }
+
+/* Notes */
+.note-form {
+  background: white;
+  border: 0.5px solid rgba(0,0,0,0.08);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.note-list {
+  display: grid;
+  gap: 12px;
+}
+
+.note-card {
+  background: white;
+  border: 0.5px solid rgba(0,0,0,0.08);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  border-left: 3px solid #EF9F27;
+}
+
+.note-card.priority-high {
+  border-left-color: #E24B4A;
+  background: rgba(252,235,235,0.3);
+}
+
+.note-card.priority-medium {
+  border-left-color: #EF9F27;
+  background: rgba(250,238,218,0.3);
+}
+
+.note-card.priority-low {
+  border-left-color: #1D9E75;
+  background: rgba(225,245,238,0.3);
+}
+
+.note-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 8px;
+}
+
+.note-title {
+  font-size: 15px;
+  font-weight: 500;
+  flex: 1;
+}
+
+.note-tags {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.tag {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: 8px;
+  font-size: 11px;
+  font-weight: 500;
+  background: #E6F1FB;
+  color: #185FA5;
+}
+
+.note-content {
+  font-size: 14px;
+  color: #666;
+  line-height: 1.5;
+  margin-bottom: 8px;
+}
+
+.note-meta {
+  font-size: 12px;
+  color: #999;
+}
+
+.delete-btn {
+  padding: 4px 12px;
+  font-size: 12px;
+  border-radius: 8px;
+  background: rgba(252,235,235,1);
+  color: #A32D2D;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+
+.delete-btn:hover {
+  opacity: 0.8;
+}
+
+/* Period Selector */
+.period-selector {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 1.5rem;
+}
+
+.period-btn {
+  padding: 8px 16px;
+  border: 0.5px solid rgba(0,0,0,0.15);
+  border-radius: 8px;
+  background: transparent;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.period-btn.active {
+  background: linear-gradient(135deg, #D85A30 0%, #EF9F27 100%);
+  color: white;
+  border: none;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 3rem;
+  color: #666;
+}
+
+.empty-state p {
+  font-size: 15px;
+  margin-bottom: 1rem;
+}
+
+/* Chart Container */
+.chart-container {
+  background: white;
+  border: 0.5px solid rgba(0,0,0,0.08);
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-bottom: 2rem;
+  height: 300px;
+}
+</style>
+</head>
+<body>
+
+<div class="app-container">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="logo">
+      <h1>Personal Hub</h1>
+      <p>เฮีย Dashboard</p>
+    </div>
+    
+    <div class="nav-menu">
+      <div class="nav-item active" data-page="dashboard">
+        <span class="nav-icon">📊</span>
+        Dashboard
+      </div>
+      <div class="nav-item" data-page="expenses">
+        <span class="nav-icon">💰</span>
+        ค่าใช้จ่าย
+      </div>
+      <div class="nav-item" data-page="notes">
+        <span class="nav-icon">📝</span>
+        โน้ต & เตือนความจำ
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main-content">
+    
+    <!-- Dashboard Page -->
+    <div class="page active" id="dashboard">
+      <div class="page-header">
+        <h2>Dashboard</h2>
+        <p>ภาพรวมค่าใช้จ่าย และโน้ตสำคัญ</p>
+      </div>
+
+      <div class="period-selector">
+        <button class="period-btn active" data-period="today">วันนี้</button>
+        <button class="period-btn" data-period="week">สัปดาห์นี้</button>
+        <button class="period-btn" data-period="month">เดือนนี้</button>
+      </div>
+
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">ค่าใช้จ่าย</div>
+          <div class="stat-value" id="totalExpense">฿0</div>
+          <div class="stat-change" id="expenseChange">—</div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-label">รายการ</div>
+          <div class="stat-value" id="expenseCount">0</div>
+          <div class="stat-change">รายการ</div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-label">โน้ตทั้งหมด</div>
+          <div class="stat-value" id="noteCount">0</div>
+          <div class="stat-change">รายการ</div>
+        </div>
+        
+        <div class="stat-card">
+          <div class="stat-label">โน้ตสำคัญ</div>
+          <div class="stat-value" id="urgentNotes">0</div>
+          <div class="stat-change" style="color: #A32D2D;">ต้องดำเนินการ</div>
+        </div>
+      </div>
+
+      <div class="chart-container">
+        <canvas id="expenseChart"></canvas>
+      </div>
+
+      <h3 style="margin-bottom: 1rem; font-size: 18px; font-weight: 500;">โน้ตสำคัญล่าสุด</h3>
+      <div id="dashboardNotes"></div>
+    </div>
+
+    <!-- Expenses Page -->
+    <div class="page" id="expenses">
+      <div class="page-header">
+        <h2>ค่าใช้จ่าย</h2>
+        <p>บันทึกและติดตามรายจ่าย</p>
+      </div>
+
+      <div class="expense-form">
+        <h3 style="margin-bottom: 1rem; font-size: 16px; font-weight: 500;">เพิ่มรายการใหม่</h3>
+        <div class="form-grid">
+          <div class="form-group">
+            <label>รายการ</label>
+            <input type="text" id="expenseName" placeholder="เช่น กาแฟเช้า">
+          </div>
+          <div class="form-group">
+            <label>จำนวนเงิน (฿)</label>
+            <input type="number" id="expenseAmount" placeholder="0">
+          </div>
+          <div class="form-group">
+            <label>หมวดหมู่</label>
+            <select id="expenseCategory">
+              <option value="food">อาหาร</option>
+              <option value="transport">เดินทาง</option>
+              <option value="shopping">ของใช้</option>
+              <option value="bills">ค่าบิล</option>
+              <option value="other">อื่นๆ</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>วันที่</label>
+            <input type="date" id="expenseDate">
+          </div>
+        </div>
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label>หมายเหตุ (ถ้ามี)</label>
+          <textarea id="expenseNote" placeholder="รายละเอียดเพิ่มเติม..."></textarea>
+        </div>
+        <button class="btn btn-primary" onclick="addExpense()">เพิ่มรายการ</button>
+      </div>
+
+      <div class="period-selector">
+        <button class="period-btn active" data-period-expenses="all">ทั้งหมด</button>
+        <button class="period-btn" data-period-expenses="today">วันนี้</button>
+        <button class="period-btn" data-period-expenses="week">สัปดาห์นี้</button>
+        <button class="period-btn" data-period-expenses="month">เดือนนี้</button>
+      </div>
+
+      <div class="expense-list" id="expenseListContainer"></div>
+    </div>
+
+    <!-- Notes Page -->
+    <div class="page" id="notes">
+      <div class="page-header">
+        <h2>โน้ต & เตือนความจำ</h2>
+        <p>จดบันทึกและจัดการงาน</p>
+      </div>
+
+      <div class="note-form">
+        <h3 style="margin-bottom: 1rem; font-size: 16px; font-weight: 500;">เพิ่มโน้ตใหม่</h3>
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label>หัวข้อ</label>
+          <input type="text" id="noteTitle" placeholder="ชื่อโน้ต">
+        </div>
+        <div class="form-group" style="margin-bottom: 1rem;">
+          <label>เนื้อหา</label>
+          <textarea id="noteContent" placeholder="รายละเอียด..."></textarea>
+        </div>
+        <div class="form-grid" style="margin-bottom: 1rem;">
+          <div class="form-group">
+            <label>ระดับความสำคัญ</label>
+            <select id="notePriority">
+              <option value="low">ต่ำ</option>
+              <option value="medium">ปานกลาง</option>
+              <option value="high">สูง</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>แท็ก (คั่นด้วยเครื่องหมายจุลภาค)</label>
+            <input type="text" id="noteTags" placeholder="งาน, ส่วนตัว, โปรเจกต์">
+          </div>
+        </div>
+        <button class="btn btn-primary" onclick="addNote()">เพิ่มโน้ต</button>
+      </div>
+
+      <div id="noteListContainer" class="note-list"></div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<script>
+// Request notification permission on load
+if ('Notification' in window && Notification.permission === 'default') {
+  Notification.requestPermission();
+}
+
+// Initialize date input to today
+document.getElementById('expenseDate').valueAsDate = new Date();
+
+// Storage keys
+const EXPENSES_KEY = 'heya-expenses-data';
+const NOTES_KEY = 'heya-notes-data';
+
+// Load data from localStorage
+let expenses = [];
+let notes = [];
+let currentPeriod = 'today';
+let currentExpensePeriod = 'all';
+
+function loadData() {
+  try {
+    const expensesData = localStorage.getItem(EXPENSES_KEY);
+    expenses = expensesData ? JSON.parse(expensesData) : [];
+  } catch (e) {
+    expenses = [];
+  }
+
+  try {
+    const notesData = localStorage.getItem(NOTES_KEY);
+    notes = notesData ? JSON.parse(notesData) : [];
+  } catch (e) {
+    notes = [];
+  }
+
+  renderAll();
+}
+
+function saveExpenses() {
+  localStorage.setItem(EXPENSES_KEY, JSON.stringify(expenses));
+}
+
+function saveNotes() {
+  localStorage.setItem(NOTES_KEY, JSON.stringify(notes));
+}
+
+// Navigation
+document.querySelectorAll('.nav-item').forEach(item => {
+  item.addEventListener('click', () => {
+    document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+    item.classList.add('active');
+    
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(item.dataset.page).classList.add('active');
+  });
+});
+
+// Period selectors
+document.querySelectorAll('.period-btn[data-period]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.period-btn[data-period]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentPeriod = btn.dataset.period;
+    renderDashboard();
+  });
+});
+
+document.querySelectorAll('.period-btn[data-period-expenses]').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.period-btn[data-period-expenses]').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    currentExpensePeriod = btn.dataset.periodExpenses;
+    renderExpenseList();
+  });
+});
+
+// Add expense
+function addExpense() {
+  const name = document.getElementById('expenseName').value.trim();
+  const amount = parseFloat(document.getElementById('expenseAmount').value);
+  const category = document.getElementById('expenseCategory').value;
+  const date = document.getElementById('expenseDate').value;
+  const note = document.getElementById('expenseNote').value.trim();
+
+  if (!name || !amount || amount <= 0) {
+    alert('กรุณากรอกรายการและจำนวนเงิน');
+    return;
+  }
+
+  expenses.push({
+    id: Date.now(),
+    name,
+    amount,
+    category,
+    date,
+    note,
+    timestamp: new Date().toISOString()
+  });
+
+  saveExpenses();
+  
+  // Clear form
+  document.getElementById('expenseName').value = '';
+  document.getElementById('expenseAmount').value = '';
+  document.getElementById('expenseNote').value = '';
+  document.getElementById('expenseDate').valueAsDate = new Date();
+  
+  renderAll();
+}
+
+// Add note
+function addNote() {
+  const title = document.getElementById('noteTitle').value.trim();
+  const content = document.getElementById('noteContent').value.trim();
+  const priority = document.getElementById('notePriority').value;
+  const tagsInput = document.getElementById('noteTags').value.trim();
+
+  if (!title || !content) {
+    alert('กรุณากรอกหัวข้อและเนื้อหา');
+    return;
+  }
+
+  const tags = tagsInput ? tagsInput.split(',').map(t => t.trim()).filter(t => t) : [];
+
+  const note = {
+    id: Date.now(),
+    title,
+    content,
+    priority,
+    tags,
+    timestamp: new Date().toISOString()
+  };
+
+  notes.push(note);
+  saveNotes();
+
+  // Send browser notification for high priority
+  if (priority === 'high' && 'Notification' in window && Notification.permission === 'granted') {
+    new Notification('โน้ตสำคัญ!', {
+      body: title,
+      icon: '📌'
+    });
+  }
+
+  // Clear form
+  document.getElementById('noteTitle').value = '';
+  document.getElementById('noteContent').value = '';
+  document.getElementById('noteTags').value = '';
+  document.getElementById('notePriority').value = 'low';
+
+  renderAll();
+}
+
+// Delete note
+function deleteNote(id) {
+  if (confirm('ลบโน้ตนี้?')) {
+    notes = notes.filter(n => n.id !== id);
+    saveNotes();
+    renderAll();
+  }
+}
+
+// Delete expense
+function deleteExpense(id) {
+  if (confirm('ลบรายการนี้?')) {
+    expenses = expenses.filter(e => e.id !== id);
+    saveExpenses();
+    renderAll();
+  }
+}
+
+// Filter by period
+function filterByPeriod(items, period) {
+  const now = new Date();
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  
+  return items.filter(item => {
+    const itemDate = new Date(item.date || item.timestamp);
+    
+    switch(period) {
+      case 'today':
+        return itemDate >= today;
+      case 'week':
+        const weekAgo = new Date(today);
+        weekAgo.setDate(weekAgo.getDate() - 7);
+        return itemDate >= weekAgo;
+      case 'month':
+        const monthAgo = new Date(today);
+        monthAgo.setMonth(monthAgo.getMonth() - 1);
+        return itemDate >= monthAgo;
+      default:
+        return true;
+    }
+  });
+}
+
+// Render dashboard
+let chartInstance = null;
+
+function renderDashboard() {
+  const filtered = filterByPeriod(expenses, currentPeriod);
+  const total = filtered.reduce((sum, e) => sum + e.amount, 0);
+  const count = filtered.length;
+
+  document.getElementById('totalExpense').textContent = `฿${total.toLocaleString('th-TH')}`;
+  document.getElementById('expenseCount').textContent = count;
+  document.getElementById('noteCount').textContent = notes.length;
+  document.getElementById('urgentNotes').textContent = notes.filter(n => n.priority === 'high').length;
+
+  // Category breakdown for chart
+  const categories = { food: 0, transport: 0, shopping: 0, bills: 0, other: 0 };
+  filtered.forEach(e => {
+    categories[e.category] = (categories[e.category] || 0) + e.amount;
+  });
+
+  const ctx = document.getElementById('expenseChart');
+  if (chartInstance) {
+    chartInstance.destroy();
+  }
+
+  chartInstance = new Chart(ctx, {
+    type: 'doughnut',
+    data: {
+      labels: ['อาหาร', 'เดินทาง', 'ของใช้', 'ค่าบิล', 'อื่นๆ'],
+      datasets: [{
+        data: [
+          categories.food,
+          categories.transport,
+          categories.shopping,
+          categories.bills,
+          categories.other
+        ],
+        backgroundColor: [
+          '#97C459',
+          '#85B7EB',
+          '#F0997B',
+          '#F09595',
+          '#B4B2A9'
+        ]
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom'
+        }
+      }
+    }
+  });
+
+  // Dashboard notes (high priority only)
+  const urgentNotes = notes.filter(n => n.priority === 'high').slice(0, 3);
+  const container = document.getElementById('dashboardNotes');
+  
+  if (urgentNotes.length === 0) {
+    container.innerHTML = '<div class="empty-state"><p>ไม่มีโน้ตสำคัญ</p></div>';
+  } else {
+    container.innerHTML = urgentNotes.map(note => `
+      <div class="note-card priority-${note.priority}" style="margin-bottom: 12px;">
+        <div class="note-header">
+          <div class="note-title">${note.title}</div>
+        </div>
+        ${note.tags.length > 0 ? `
+          <div class="note-tags">
+            ${note.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+          </div>
+        ` : ''}
+        <div class="note-content">${note.content}</div>
+        <div class="note-meta">${new Date(note.timestamp).toLocaleDateString('th-TH')}</div>
+      </div>
+    `).join('');
+  }
+}
+
+// Render expense list
+function renderExpenseList() {
+  const filtered = filterByPeriod(expenses, currentExpensePeriod);
+  const sorted = [...filtered].sort((a, b) => new Date(b.date) - new Date(a.date));
+  
+  const container = document.getElementById('expenseListContainer');
+  
+  if (sorted.length === 0) {
+    container.innerHTML = '<div class="empty-state"><p>ไม่มีรายการ</p></div>';
+  } else {
+    container.innerHTML = sorted.map(exp => `
+      <div class="expense-item">
+        <div class="expense-info">
+          <div class="expense-title">
+            <span class="category-badge cat-${exp.category}">${getCategoryName(exp.category)}</span>
+            ${exp.name}
+          </div>
+          <div class="expense-meta">
+            ${new Date(exp.date).toLocaleDateString('th-TH')}
+            ${exp.note ? `· ${exp.note}` : ''}
+          </div>
+        </div>
+        <div style="display: flex; align-items: center; gap: 12px;">
+          <div class="expense-amount">฿${exp.amount.toLocaleString('th-TH')}</div>
+          <button class="delete-btn" onclick="deleteExpense(${exp.id})">ลบ</button>
+        </div>
+      </div>
+    `).join('');
+  }
+}
+
+// Render notes
+function renderNotes() {
+  const sorted = [...notes].sort((a, b) => {
+    const priorityOrder = { high: 3, medium: 2, low: 1 };
+    if (priorityOrder[b.priority] !== priorityOrder[a.priority]) {
+      return priorityOrder[b.priority] - priorityOrder[a.priority];
+    }
+    return new Date(b.timestamp) - new Date(a.timestamp);
+  });
+
+  const container = document.getElementById('noteListContainer');
+  
+  if (sorted.length === 0) {
+    container.innerHTML = '<div class="empty-state"><p>ไม่มีโน้ต</p></div>';
+  } else {
+    container.innerHTML = sorted.map(note => `
+      <div class="note-card priority-${note.priority}">
+        <div class="note-header">
+          <div class="note-title">${note.title}</div>
+          <button class="delete-btn" onclick="deleteNote(${note.id})">ลบ</button>
+        </div>
+        ${note.tags.length > 0 ? `
+          <div class="note-tags">
+            ${note.tags.map(tag => `<span class="tag">${tag}</span>`).join('')}
+          </div>
+        ` : ''}
+        <div class="note-content">${note.content}</div>
+        <div class="note-meta">
+          ${getPriorityName(note.priority)} · ${new Date(note.timestamp).toLocaleDateString('th-TH')}
+        </div>
+      </div>
+    `).join('');
+  }
+}
+
+function getCategoryName(cat) {
+  const names = {
+    food: 'อาหาร',
+    transport: 'เดินทาง',
+    shopping: 'ของใช้',
+    bills: 'ค่าบิล',
+    other: 'อื่นๆ'
+  };
+  return names[cat] || cat;
+}
+
+function getPriorityName(p) {
+  const names = { high: 'สูง', medium: 'ปานกลาง', low: 'ต่ำ' };
+  return names[p] || p;
+}
+
+function renderAll() {
+  renderDashboard();
+  renderExpenseList();
+  renderNotes();
+}
+
+// Load data on startup
+loadData();
+
+// Register service worker for PWA
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => console.log('Service Worker registered'))
+      .catch(err => console.log('Service Worker registration failed:', err));
+  });
+}
+</script>
+
+</body>
+</html>
