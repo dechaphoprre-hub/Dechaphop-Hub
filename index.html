@@ -433,6 +433,113 @@ body {
   margin-bottom: 2rem;
   height: 300px;
 }
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+  .app-container {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    height: auto;
+    padding: 1rem 0;
+    position: relative;
+  }
+
+  .logo {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 1rem 1rem;
+    border-bottom: none;
+    margin-bottom: 0;
+  }
+
+  .nav-menu {
+    display: none;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: linear-gradient(135deg, #D85A30 0%, #EF9F27 100%);
+    z-index: 1000;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  }
+
+  .nav-menu.active {
+    display: block;
+  }
+
+  .nav-item {
+    border-left: none;
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+  }
+
+  .hamburger {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    cursor: pointer;
+    padding: 8px;
+  }
+
+  .hamburger span {
+    width: 24px;
+    height: 3px;
+    background: white;
+    border-radius: 2px;
+    transition: all 0.3s;
+  }
+
+  .hamburger.active span:nth-child(1) {
+    transform: rotate(45deg) translate(5px, 5px);
+  }
+
+  .hamburger.active span:nth-child(2) {
+    opacity: 0;
+  }
+
+  .hamburger.active span:nth-child(3) {
+    transform: rotate(-45deg) translate(7px, -6px);
+  }
+
+  .main-content {
+    padding: 1rem;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .period-selector {
+    flex-wrap: wrap;
+  }
+
+  .period-btn {
+    flex: 1;
+    min-width: 80px;
+  }
+
+  .expense-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .expense-item > div:last-child {
+    width: 100%;
+    justify-content: space-between;
+  }
+}
+
+.hamburger {
+  display: none;
+}
 </style>
 </head>
 <body>
@@ -441,8 +548,15 @@ body {
   <!-- Sidebar -->
   <div class="sidebar">
     <div class="logo">
-      <h1>Personal Hub</h1>
-      <p>เฮีย Dashboard</p>
+      <div>
+        <h1>Personal Hub</h1>
+        <p>เฮีย Dashboard</p>
+      </div>
+      <div class="hamburger" id="hamburger">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
     </div>
     
     <div class="nav-menu">
@@ -655,7 +769,20 @@ document.querySelectorAll('.nav-item').forEach(item => {
     
     document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
     document.getElementById(item.dataset.page).classList.add('active');
+
+    // Close mobile menu after selection
+    document.querySelector('.nav-menu').classList.remove('active');
+    document.getElementById('hamburger').classList.remove('active');
   });
+});
+
+// Hamburger menu toggle
+const hamburger = document.getElementById('hamburger');
+const navMenu = document.querySelector('.nav-menu');
+
+hamburger.addEventListener('click', () => {
+  hamburger.classList.toggle('active');
+  navMenu.classList.toggle('active');
 });
 
 // Period selectors
